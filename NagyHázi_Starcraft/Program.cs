@@ -26,7 +26,10 @@ namespace NagyHázi_Starcraft
         }
         public char[,] StateOfThePF = new char[10,10];
 
-        
+        public Playingfield()
+        {
+            StateOfThePF = Playingfield.CreateDefaultPF(ref StateOfThePF);
+        }
     }
 
     class Units
@@ -39,6 +42,16 @@ namespace NagyHázi_Starcraft
 
     class Frontend
     {
+        public static void SlowPrint(string Text, int speed = 100)
+        {
+            for (int i = 0; i < Text.Length; i++)
+            {
+                Console.Write(Text[i]);
+                System.Threading.Thread.Sleep(speed);
+            }
+            Console.WriteLine();
+        }
+
         public static void FieldRender(char[,] PF)
         {
             for (int i = 0; i < 10; i++)
@@ -47,6 +60,7 @@ namespace NagyHázi_Starcraft
                 {
                     Console.Write(PF[i, j]);
                     Console.Write(' ');
+                    
                 }
                 Console.WriteLine("");
             }
@@ -63,7 +77,7 @@ namespace NagyHázi_Starcraft
             System.Console.OutputEncoding = System.Text.Encoding.UTF8;
             //Field initialization
             Playingfield PF = new Playingfield();
-            PF.StateOfThePF = Playingfield.CreateDefaultPF(ref PF.StateOfThePF);
+            
             Frontend.FieldRender(PF.StateOfThePF);
             
             Console.ReadLine();
