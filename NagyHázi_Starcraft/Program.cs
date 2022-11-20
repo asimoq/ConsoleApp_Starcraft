@@ -59,8 +59,7 @@ namespace NagyHázi_Starcraft
                 for (int j = 0; j < 10; j++)
                 {
                     Console.Write(PF[i, j]);
-                    Console.Write(' ');
-                    
+                    Console.Write(' ');                    
                 }
                 Console.WriteLine("");
             }
