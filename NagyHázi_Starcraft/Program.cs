@@ -24,7 +24,7 @@ namespace NagyHázi_Starcraft
             }
             return PF;
         }
-        public char[,] StateOfThePF = new char[9,9]; // itt kódon belül beállítható a pályaméret
+        public char[,] StateOfThePF = new char[10,10]; // itt kódon belül beállítható a pályaméret
 
         public Playingfield()
         {
@@ -56,6 +56,11 @@ namespace NagyHázi_Starcraft
             Coordinates[1] = y;
 
         }
+        public static void BaseInitialisation(Base Zerg, Base Terran, Playingfield PF)
+        {
+            PF.StateOfThePF[Zerg.Coordinates[0], Zerg.Coordinates[1]] = 'Z';
+            PF.StateOfThePF[Terran.Coordinates[0], Terran.Coordinates[1]] = 'T';
+        }
     }
 
     class Frontend
@@ -76,8 +81,21 @@ namespace NagyHázi_Starcraft
             {
                 for (int j = 0; j < 10; j++)
                 {
-                    Console.Write(PF[i, j]);
-                    Console.Write(' ');                    
+                    if(PF[i, j] != '•')
+                    {
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.Write(PF[i, j]);
+                        Console.ResetColor();
+                        Console.Write(' ');
+                    }
+                    else
+                    {
+                        Console.Write(PF[i, j]);
+                        Console.Write(' ');
+                    }
+                    
+                    
+                                        
                 }
                 Console.WriteLine("");
             }
@@ -90,11 +108,13 @@ namespace NagyHázi_Starcraft
     {
         static void Main(string[] args)
         {
-            //Unicode characters.
+            //initialising Unicode characters.
             System.Console.OutputEncoding = System.Text.Encoding.UTF8;
             //Field initialization
             Playingfield PF = new Playingfield();
-            
+            Base terranBase = new Base(0, 4);
+            Base zergBase = new Base(9, 4);
+            Base.BaseInitialisation(zergBase, terranBase, PF);
             Frontend.FieldRender(PF.StateOfThePF);
             
             Console.ReadLine();
