@@ -13,10 +13,10 @@ namespace NagyHázi_Starcraft
         
         public static char[,] CreateDefaultPF(ref char[,] PF)
         {
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < PF.GetLength(0); i++)
             {
                 
-                for (int j = 0; j < 10; j++)
+                for (int j = 0; j < PF.GetLength(1); j++)
                 {
                     PF[i, j] = '•';
                 }
@@ -24,7 +24,7 @@ namespace NagyHázi_Starcraft
             }
             return PF;
         }
-        public char[,] StateOfThePF = new char[10,10];
+        public char[,] StateOfThePF = new char[9,9]; // itt kódon belül beállítható a pályaméret
 
         public Playingfield()
         {
@@ -34,10 +34,28 @@ namespace NagyHázi_Starcraft
 
     class Units
     {
+        public int Lives;
+        public int AttackStrength;
+        public int Range;
+        public int PopultaionSize;
+        public int TimeToMake;
+        
+        public int MaxNumberOfUnits;
+        public int[] Coordinates = new int[2];
+        public int TimeTillNextUnit;
+        public bool Visible = false;
+    }
 
+    class Base : Units
+    {
+        public Base(int x, int y)
+        {
+            Lives = 10;
+            MaxNumberOfUnits = 1;
+            Coordinates[0] = x;
+            Coordinates[1] = y;
 
-
-
+        }
     }
 
     class Frontend
