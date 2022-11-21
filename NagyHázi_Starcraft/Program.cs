@@ -85,40 +85,57 @@ namespace NagyHázi_Starcraft
         }
         public static void CursorMovement(Playingfield PF, Cursor cursor)
         {
-            switch (Console.ReadKey().Key)
+            bool exit = false;
+            while (exit == false)
             {
-                case ConsoleKey.UpArrow:
-                    {
-                        PF.PfData[cursor.CursosCoordinates[0], cursor.CursosCoordinates[1]] = cursor.HiddenData;
-                        cursor.CursosCoordinates[0] -= 1;
-                        cursor.HiddenData = PF.PfData[cursor.CursosCoordinates[0], cursor.CursosCoordinates[1]];
-                        PF.PfData[cursor.CursosCoordinates[0], cursor.CursosCoordinates[1]] = 'X';
+                switch (Console.ReadKey().Key)
+                {
+                    case ConsoleKey.UpArrow:
+                        {
+                            PF.PfData[cursor.CursosCoordinates[0], cursor.CursosCoordinates[1]] = cursor.HiddenData;
+                            cursor.CursosCoordinates[0] -= 1;
+                            cursor.HiddenData = PF.PfData[cursor.CursosCoordinates[0], cursor.CursosCoordinates[1]];
+                            PF.PfData[cursor.CursosCoordinates[0], cursor.CursosCoordinates[1]] = 'X';
+                            Frontend.FieldRender(PF);
+                            break;
+                        }
+                    case ConsoleKey.DownArrow:
+                        {
+                            PF.PfData[cursor.CursosCoordinates[0], cursor.CursosCoordinates[1]] = cursor.HiddenData;
+                            cursor.CursosCoordinates[0] += 1;
+                            cursor.HiddenData = PF.PfData[cursor.CursosCoordinates[0], cursor.CursosCoordinates[1]];
+                            PF.PfData[cursor.CursosCoordinates[0], cursor.CursosCoordinates[1]] = 'X';
+                            Frontend.FieldRender(PF);
+                            break;
+                        }
+                    case ConsoleKey.LeftArrow:
+                        {
+                            PF.PfData[cursor.CursosCoordinates[0], cursor.CursosCoordinates[1]] = cursor.HiddenData;
+                            cursor.CursosCoordinates[1] -= 1;
+                            cursor.HiddenData = PF.PfData[cursor.CursosCoordinates[0], cursor.CursosCoordinates[1]];
+                            PF.PfData[cursor.CursosCoordinates[0], cursor.CursosCoordinates[1]] = 'X';
+                            Frontend.FieldRender(PF);
+                            break;
+                        }
+                    case ConsoleKey.RightArrow:
+                        {
+                            PF.PfData[cursor.CursosCoordinates[0], cursor.CursosCoordinates[1]] = cursor.HiddenData;
+                            cursor.CursosCoordinates[1] += 1;
+                            cursor.HiddenData = PF.PfData[cursor.CursosCoordinates[0], cursor.CursosCoordinates[1]];
+                            PF.PfData[cursor.CursosCoordinates[0], cursor.CursosCoordinates[1]] = 'X';
+                            Frontend.FieldRender(PF);
+                            break;
+                        }
+                    case ConsoleKey.Backspace:
+                        exit = true;
+                        Console.Clear();
+                        Console.WriteLine("Press enter to exit the application.");
                         break;
-                    }
-                case ConsoleKey.DownArrow:
-                    {
-                        PF.PfData[cursor.CursosCoordinates[0], cursor.CursosCoordinates[1]] = cursor.HiddenData;
-                        cursor.CursosCoordinates[0] += 1;
-                        cursor.HiddenData = PF.PfData[cursor.CursosCoordinates[0], cursor.CursosCoordinates[1]];
-                        PF.PfData[cursor.CursosCoordinates[0], cursor.CursosCoordinates[1]] = 'X';
-                        break;
-                    }
-                case ConsoleKey.LeftArrow:
-                    {
-                        PF.PfData[cursor.CursosCoordinates[0], cursor.CursosCoordinates[1]] = cursor.HiddenData;
-                        cursor.CursosCoordinates[1] -= 1;
-                        cursor.HiddenData = PF.PfData[cursor.CursosCoordinates[0], cursor.CursosCoordinates[1]];
-                        PF.PfData[cursor.CursosCoordinates[0], cursor.CursosCoordinates[1]] = 'X';
-                        break;
-                    }
-                case ConsoleKey.RightArrow:
-                    {
-                        PF.PfData[cursor.CursosCoordinates[0], cursor.CursosCoordinates[1]] = cursor.HiddenData;
-                        cursor.CursosCoordinates[1] += 1;
-                        cursor.HiddenData = PF.PfData[cursor.CursosCoordinates[0], cursor.CursosCoordinates[1]];
-                        PF.PfData[cursor.CursosCoordinates[0], cursor.CursosCoordinates[1]] = 'X';
-                        break;
-                    }
+                    default:
+                        {
+                            Console.WriteLine("Press the Backspace for exit, or use the arrow keys to move the cursor"); break;
+                        }
+                }
             }
         }
     }
@@ -137,9 +154,7 @@ namespace NagyHázi_Starcraft
 
         public static void FieldRender(Playingfield PF)
         {
-            
-
-
+            Console.Clear();
             for (int i = 0; i < 10; i++)
             {
                 for (int j = 0; j < 10; j++)
@@ -173,7 +188,7 @@ namespace NagyHázi_Starcraft
                             
                         case 'X':
                             {
-                                Console.ForegroundColor = ConsoleColor.Blue;
+                                Console.ForegroundColor = ConsoleColor.Green;
                                 Console.Write(PF.StateOfThePF[i, j]);
                                 Console.ResetColor();
                                 Console.Write(' ');
@@ -186,16 +201,9 @@ namespace NagyHázi_Starcraft
                                 Console.Write(PF.StateOfThePF[i, j]);
                                 Console.ResetColor();
                                 Console.Write(' ');
+                                break;
                             }
-                            break;
-
-
-
-                    }
-                    
-                    
-                    
-                                        
+                    }                      
                 }
                 Console.WriteLine("");
             }
@@ -216,15 +224,16 @@ namespace NagyHázi_Starcraft
             Base terranBase = new Base(0, 4);
             Base zergBase = new Base(9, 4);
             Base.BaseInitialisation(zergBase, terranBase, PF);
-            Frontend.FieldRender(PF, cursor.CursosCoordinates);
+            Frontend.FieldRender(PF);
 
             Units[] TerranUnits = new Units[5];
             for (int i = 0; i < TerranUnits.Length; i++)
             {
                 TerranUnits[i] = new Units();
             }
+            Cursor.CursorMovement(PF, cursor);
 
-            while(Console.ReadKey().Key != )
+            
             
             
             Console.ReadLine();
