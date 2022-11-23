@@ -1,4 +1,8 @@
 ﻿using System;
+using System.IO;
+using System.Collections;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.Runtime.Serialization;
 
 namespace NagyHázi_Starcraft
 {
@@ -31,7 +35,7 @@ namespace NagyHázi_Starcraft
         public static void FieldRender(Playingfield PF)
         {
             FastConsoleClear();
-            Console.WriteLine(PF.WhosTurn + "'s turn!");
+            Console.WriteLine(PF.WhosTurn + "'s turn! --- To Save game status press Enter --- To Exit press Escape");
             Console.SetCursorPosition(0, 21); Console.Write(new string(' ', Console.WindowWidth));
             Console.SetCursorPosition(0, 1);
             for (int i = 0; i < 10; i++)
@@ -96,6 +100,7 @@ namespace NagyHázi_Starcraft
         }
     }
 
+    [Serializable]
     internal class Playingfield
     {
         public char[,] StateOfThePF = new char[10, 10]; // itt kódon belül beállítható a pályaméret, ennek meg kell egyezni a PfData pálya méretével. Ebben a táblában található karaktereket foglya megjeleníteni a renderer
@@ -121,6 +126,7 @@ namespace NagyHázi_Starcraft
         }
     }
 
+    [Serializable]
     internal class Units
     {
         public int Lives;
@@ -132,6 +138,7 @@ namespace NagyHázi_Starcraft
         public char UnitID;
     }
 
+    [Serializable]
     internal class Marauders : Units
     {
         public Marauders()
@@ -146,6 +153,7 @@ namespace NagyHázi_Starcraft
         }
     }
 
+    [Serializable]
     internal class CacoDemons : Units
     {
         public CacoDemons()
@@ -160,6 +168,7 @@ namespace NagyHázi_Starcraft
         }
     }
 
+    [Serializable]
     internal class SnakesWithKnives : Units
     {
         public SnakesWithKnives()
@@ -174,6 +183,7 @@ namespace NagyHázi_Starcraft
         }
     }
 
+    [Serializable]
     internal class Base : Units
     {
         public int[] BaseCoordinates = new int[2];
@@ -190,9 +200,10 @@ namespace NagyHázi_Starcraft
         }
     }
 
+    [Serializable]
     internal class Interacrions
     {
-        public int[] CursorCoordinates = new int[2];
+        private readonly int[] CursorCoordinates = new int[2];
         public char HiddenData;
         public int[] SelectedCoordinates = new int[2];
 
@@ -235,7 +246,46 @@ namespace NagyHázi_Starcraft
             player.CurrentActtionsRemaining = player.MaxActions;
         }
 
-        public static void CursorMovement(Playingfield PF, Interacrions cursor, ref bool pass, Players player, int range)
+        private static void FileSave(Playingfield PF, Players Zerg, Players Terran, Interacrions cursor)
+        {
+            Frontend.SlowPrint("Saving Gamestate...");
+            BinaryFormatter bf = new BinaryFormatter();
+            FileStream pfdata = File.Create("PF.dat");
+            FileStream zergdata = File.Create("Zerg.dat");
+            FileStream terrandata = File.Create("Terran.dat");
+            FileStream cursordata = File.Create("cursor.dat");
+
+            bf.Serialize(pfdata, PF);
+            bf.Serialize(zergdata, Zerg);
+            bf.Serialize(terrandata, Terran);
+            bf.Serialize(cursordata, cursor);
+            pfdata.Close();
+            zergdata.Close();
+            terrandata.Close();
+            cursordata.Close();
+        }
+
+        public static void FileLoad(ref Playingfield PF, ref Players Zerg, ref Players Terran, ref Interacrions cursor)
+        {
+            Frontend.SlowPrint("Loading save...");
+            BinaryFormatter bf = new BinaryFormatter();
+            FileStream pfdata = File.Open("PF.dat", FileMode.Open);
+            FileStream zergdata = File.Open("Zerg.dat", FileMode.Open);
+            FileStream terrandata = File.Open("Terran.dat", FileMode.Open);
+            FileStream cursordata = File.Open("cursor.dat", FileMode.Open);
+
+            Playingfield tempPF = (Playingfield)bf.Deserialize(pfdata); pfdata.Close();
+            Players tempZerg = (Players)bf.Deserialize(zergdata); zergdata.Close();
+            Players tempTerran = (Players)bf.Deserialize(terrandata); terrandata.Close();
+            Interacrions tempCursor = (Interacrions)bf.Deserialize(cursordata); cursordata.Close();
+
+            PF = tempPF;
+            Zerg = tempZerg;
+            Terran = tempTerran;
+            cursor = tempCursor;
+        }
+
+        public static void CursorMovement(Playingfield PF, Interacrions cursor, ref bool pass, Players player, int range, Players Zerg, Players Terran)
         {
             switch (Console.ReadKey(true).Key)
             {
@@ -302,6 +352,16 @@ namespace NagyHázi_Starcraft
                     pass = UnitAttackEffective(PF, cursor, player);
                     break;
 
+                case ConsoleKey.Enter:
+                    FileSave(PF, Zerg, Terran, cursor);
+                    break;
+
+                case ConsoleKey.Escape:
+                    PF.lives[0, 4] = 0;
+                    PF.lives[9, 4] = 0;
+                    pass = true;
+                    break;
+
                 default:
                     {
                         Console.Write(new string(' ', Console.WindowWidth));
@@ -309,6 +369,7 @@ namespace NagyHázi_Starcraft
                         break;
                     }
             }
+            if (PF.lives[0, 4] < 1 || PF.lives[9, 4] < 1) pass = true;
         }
 
         public static void Options(Playingfield PF, Interacrions cursor, Players player, ref bool pass)
@@ -346,7 +407,7 @@ namespace NagyHázi_Starcraft
             }
         }
 
-        public static void UnitMovementOptions(Playingfield PF, Interacrions cursor, Players player, ref bool pass)
+        private static void UnitMovementOptions(Playingfield PF, Interacrions cursor, Players player, ref bool pass)
         {
             cursor.SelectedCoordinates[0] = cursor.CursorCoordinates[0];
             cursor.SelectedCoordinates[1] = cursor.CursorCoordinates[1];
@@ -357,7 +418,7 @@ namespace NagyHázi_Starcraft
             {
                 Frontend.FieldRender(PF);
                 Console.WriteLine("Use the ARROW KEYS to select an area, then press S to finalize your selection\nor Press Backspace to exit selection " + cursor.SelectedCoordinates[0] + "-" + cursor.SelectedCoordinates[1]);
-                CursorMovement(PF, cursor, ref pass, player, 1);
+                CursorMovement(PF, cursor, ref pass, player, 1, player, player);
             }
             pass = false;
             Frontend.FieldRender(PF);
@@ -378,7 +439,7 @@ namespace NagyHázi_Starcraft
             PF.range[cursor.SelectedCoordinates[0], cursor.SelectedCoordinates[1]] = 0;
         }
 
-        public static void UnitPlacementOptions(Playingfield PF, Players player, int x, int y, Interacrions cursor)
+        private static void UnitPlacementOptions(Playingfield PF, Players player, int x, int y, Interacrions cursor)
         {
             Console.SetCursorPosition(0, 14);
             Console.WriteLine("Rounds till you can place your next Marauders: " + player.marauders.TimeTillNextUnit);
@@ -405,7 +466,7 @@ namespace NagyHázi_Starcraft
             }
         }
 
-        public static void TryToPlaceUnit(Playingfield PF, Players player, Units unit, int x, int y, Interacrions cursor)
+        private static void TryToPlaceUnit(Playingfield PF, Players player, Units unit, int x, int y, Interacrions cursor)
         {
             if (unit.TimeTillNextUnit == 0 && player.MaxPopulation >= player.CurrentPopulation + unit.PopultaionSize && player.MaxNumberOfUnits >= player.CurrentNumberOfUnits + 1)
             {
@@ -456,7 +517,7 @@ namespace NagyHázi_Starcraft
             }
         }
 
-        public static void UnitAttackOptions(Playingfield PF, Interacrions cursor, Players player, ref bool pass)
+        private static void UnitAttackOptions(Playingfield PF, Interacrions cursor, Players player, ref bool pass)
         {
             cursor.SelectedCoordinates[0] = cursor.CursorCoordinates[0];
             cursor.SelectedCoordinates[1] = cursor.CursorCoordinates[1];
@@ -467,7 +528,7 @@ namespace NagyHázi_Starcraft
             {
                 Frontend.FieldRender(PF);
                 Console.WriteLine("Use the ARROW KEYS to select an area, then press T to finalize your selection\nor Press Backspace to exit selection " + cursor.SelectedCoordinates[0] + "-" + cursor.SelectedCoordinates[1]);
-                CursorMovement(PF, cursor, ref pass, player, PF.range[cursor.SelectedCoordinates[0], cursor.SelectedCoordinates[1]]);
+                CursorMovement(PF, cursor, ref pass, player, PF.range[cursor.SelectedCoordinates[0], cursor.SelectedCoordinates[1]], player, player);
             }
             pass = false;
         }
@@ -500,6 +561,7 @@ namespace NagyHázi_Starcraft
         }
     }
 
+    [Serializable]
     internal class Players
     {
         public int MaxPopulation = 20;
@@ -533,6 +595,8 @@ namespace NagyHázi_Starcraft
             Console.CursorVisible = false;
             //initialising Unicode characters.
             System.Console.OutputEncoding = System.Text.Encoding.UTF8;
+            //menu:
+            bool load = true;
             //Field initialization
             Playingfield PF = new Playingfield();
             Interacrions cursor = new Interacrions();
@@ -541,7 +605,6 @@ namespace NagyHázi_Starcraft
             Players Zerg = new Players("Zerg", 'Z');
             Players Terran = new Players("Terran", 'T');
             PF.WhosTurn = Zerg.name;
-            bool InGame = true;
             bool Pass = false;
             Interacrions.PlaceUnit(PF, Interacrions.WhosTurnItIs(PF, Zerg, Terran).Base, 0, 4, cursor);
             PF.StateOfThePF[0, 4] = 'Z';
@@ -552,13 +615,18 @@ namespace NagyHázi_Starcraft
             Terran.Base.BaseCoordinates[0] = 9; Terran.Base.BaseCoordinates[1] = 4;
             PF.WhosTurn = Zerg.name;
             cursor.HiddenData = '0';
-            while (InGame)
+            while (PF.lives[0, 4] > 0 && PF.lives[9, 4] > 0)
             {
                 while (!Pass) //one round
                 {
+                    if (load)
+                    {
+                        Interacrions.FileLoad(ref PF, ref Zerg, ref Terran, ref cursor);
+                        load = false;
+                    }
                     Frontend.FieldRender(PF);
                     Interacrions.Options(PF, cursor, Interacrions.WhosTurnItIs(PF, Zerg, Terran), ref Pass);
-                    Interacrions.CursorMovement(PF, cursor, ref Pass, Interacrions.WhosTurnItIs(PF, Zerg, Terran), 100);
+                    Interacrions.CursorMovement(PF, cursor, ref Pass, Interacrions.WhosTurnItIs(PF, Zerg, Terran), 100, Zerg, Terran);
                 }
                 Interacrions.RoundHasPassed(Interacrions.WhosTurnItIs(PF, Zerg, Terran));
                 Pass = false;
@@ -570,6 +638,16 @@ namespace NagyHázi_Starcraft
                 {
                     PF.WhosTurn = Zerg.name;
                 }
+            }
+            if (PF.lives[0, 4] < 1 && PF.lives[9, 4] < 1)
+            {
+                Console.Clear();
+                Console.WriteLine("Thanks for playing!");
+            }
+            else
+            {
+                if (PF.lives[0, 4] < 1) Console.WriteLine("Terran WIN!");
+                else Console.WriteLine("Zerg WIN!");
             }
 
             Console.ReadLine();
