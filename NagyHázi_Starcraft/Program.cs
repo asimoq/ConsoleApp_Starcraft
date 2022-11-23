@@ -32,6 +32,8 @@ namespace NagyHázi_Starcraft
         {
             FastConsoleClear();
             Console.WriteLine(PF.WhosTurn + "'s turn!");
+            Console.SetCursorPosition(0, 21); Console.Write(new string(' ', Console.WindowWidth));
+            Console.SetCursorPosition(0, 1);
             for (int i = 0; i < 10; i++)
             {
                 for (int j = 0; j < 10; j++)
@@ -71,6 +73,14 @@ namespace NagyHázi_Starcraft
                                 Console.Write(' ');
                                 break;
                             }
+                        case 'M':
+                            {
+                                Console.ForegroundColor = ConsoleColor.Magenta;
+                                Console.Write(PF.StateOfThePF[i, j]);
+                                Console.ResetColor();
+                                Console.Write(' ');
+                                break;
+                            }
 
                         default:
                             {
@@ -92,6 +102,8 @@ namespace NagyHázi_Starcraft
         public char[,] PfData = new char[10, 10]; // Ez a tábla tárolja a pályán lévő egységek adatait: Melyik csapathoz tartoznak,
         public string WhosTurn;
         public int[,] lives = new int[10, 10];
+        public int[,] range = new int[10, 10];
+        public int[,] strength = new int[10, 10];
 
         public Playingfield()
         {
@@ -102,6 +114,8 @@ namespace NagyHázi_Starcraft
                     StateOfThePF[i, j] = '•';
                     PfData[i, j] = '0';
                     lives[i, j] = 0;
+                    range[i, j] = 0;
+                    strength[i, j] = 0;
                 }
             }
         }
@@ -178,75 +192,15 @@ namespace NagyHázi_Starcraft
 
     internal class Interacrions
     {
-        public int[] CursosCoordinates = new int[2];
+        public int[] CursorCoordinates = new int[2];
         public char HiddenData;
         public int[] SelectedCoordinates = new int[2];
 
         public Interacrions()
         {
-            CursosCoordinates[0] = 5;
-            CursosCoordinates[1] = 4;
+            CursorCoordinates[0] = 5;
+            CursorCoordinates[1] = 4;
             HiddenData = '0'; // data hidden by the cursor
-        }
-
-        public static void CursorMovement(Playingfield PF, Interacrions cursor, ref bool pass, Players player)
-        {
-            switch (Console.ReadKey().Key)
-            {
-                case ConsoleKey.UpArrow:
-                    if (cursor.CursosCoordinates[0] - 1 < 0) break;
-                    PF.PfData[cursor.CursosCoordinates[0], cursor.CursosCoordinates[1]] = cursor.HiddenData;
-                    cursor.CursosCoordinates[0] -= 1;
-                    cursor.HiddenData = PF.PfData[cursor.CursosCoordinates[0], cursor.CursosCoordinates[1]];
-                    PF.PfData[cursor.CursosCoordinates[0], cursor.CursosCoordinates[1]] = 'X';
-                    break;
-
-                case ConsoleKey.DownArrow:
-                    if (cursor.CursosCoordinates[0] + 1 == 10) break;
-                    PF.PfData[cursor.CursosCoordinates[0], cursor.CursosCoordinates[1]] = cursor.HiddenData;
-                    cursor.CursosCoordinates[0] += 1;
-                    cursor.HiddenData = PF.PfData[cursor.CursosCoordinates[0], cursor.CursosCoordinates[1]];
-                    PF.PfData[cursor.CursosCoordinates[0], cursor.CursosCoordinates[1]] = 'X';
-
-                    break;
-
-                case ConsoleKey.LeftArrow:
-                    if (cursor.CursosCoordinates[1] - 1 < 0) break;
-                    PF.PfData[cursor.CursosCoordinates[0], cursor.CursosCoordinates[1]] = cursor.HiddenData;
-                    cursor.CursosCoordinates[1] -= 1;
-                    cursor.HiddenData = PF.PfData[cursor.CursosCoordinates[0], cursor.CursosCoordinates[1]];
-                    PF.PfData[cursor.CursosCoordinates[0], cursor.CursosCoordinates[1]] = 'X';
-
-                    break;
-
-                case ConsoleKey.RightArrow:
-                    if (cursor.CursosCoordinates[1] + 1 == 10) break;
-                    PF.PfData[cursor.CursosCoordinates[0], cursor.CursosCoordinates[1]] = cursor.HiddenData;
-                    cursor.CursosCoordinates[1] += 1;
-                    cursor.HiddenData = PF.PfData[cursor.CursosCoordinates[0], cursor.CursosCoordinates[1]];
-                    PF.PfData[cursor.CursosCoordinates[0], cursor.CursosCoordinates[1]] = 'X';
-
-                    break;
-
-                case ConsoleKey.Backspace:
-                    pass = true;
-                    Console.Clear();
-
-                    break;
-
-                case ConsoleKey.P:
-                    UnitPlacementOptions(PF, player, cursor.CursosCoordinates[0], cursor.CursosCoordinates[1], cursor);
-                    break;
-
-                case ConsoleKey.U:
-
-                default:
-                    {
-                        Console.Write(new string(' ', Console.WindowWidth));
-                        Console.SetCursorPosition(0, Console.CursorTop - 1);
-                        break;
-                    }
-            }
         }
 
         public static Players WhosTurnItIs(Playingfield PF, Players Zerg, Players Terran)
@@ -261,80 +215,7 @@ namespace NagyHázi_Starcraft
             }
         }
 
-        public static void PlaceUnit(Playingfield PF, Units unit, int x, int y, Interacrions cursor)
-        {
-            PF.StateOfThePF[x, y] = unit.UnitID;
-            PF.lives[x, y] = unit.Lives;
-            if (PF.WhosTurn == "Zerg")
-            {
-                PF.PfData[x, y] = 'Z';
-                cursor.HiddenData = 'Z';
-            }
-            else
-            {
-                PF.PfData[x, y] = 'T';
-                cursor.HiddenData = 'T';
-            }
-        }
-
-        public static void TryToPlaceUnit(Playingfield PF, Players player, Units unit, int x, int y, Interacrions cursor)
-        {
-            if (unit.TimeTillNextUnit == 0 && player.MaxPopulation >= player.CurrentPopulation + unit.PopultaionSize && player.MaxNumberOfUnits >= player.CurrentNumberOfUnits + 1)
-            {
-                PlaceUnit(PF, unit, x, y, cursor);
-                unit.TimeTillNextUnit = unit.TimeToMake;
-                player.CurrentActtionsRemaining -= 1;
-                player.CurrentNumberOfUnits += 1;
-                player.CurrentPopulation += unit.PopultaionSize;
-                Frontend.FieldRender(PF);
-            }
-            else
-            {
-                if (player.MaxPopulation < player.CurrentPopulation + unit.PopultaionSize)
-                {
-                    Console.WriteLine("\nCan't place that unit due to your max population size, choose a nother one");
-                    UnitPlacementOptions(PF, player, x, y, cursor);
-                }
-                if (player.marauders.TimeTillNextUnit != 0)
-                {
-                    Console.WriteLine("\nTnhat unit isn't ready, choose a nother one!");
-                    UnitPlacementOptions(PF, player, x, y, cursor);
-                }
-                if (player.MaxNumberOfUnits < player.CurrentNumberOfUnits + 1)
-                {
-                    Console.WriteLine("\nYou can't have that many units, try moving or attacking with one of your units, or pass to the other player by pressing Backspace!");
-                    UnitPlacementOptions(PF, player, x, y, cursor);
-                }
-            }
-        }
-
-        public static void UnitPlacementOptions(Playingfield PF, Players player, int x, int y, Interacrions cursor)
-        {
-            Console.SetCursorPosition(0, 12);
-            Console.WriteLine("\nRounds till you can place your next Marauders: " + player.marauders.TimeTillNextUnit);
-            Console.WriteLine("Rounds till you can place your next Snakes with Knives: " + player.snakes.TimeTillNextUnit);
-            Console.WriteLine("Rounds till you can place your next CacoDemons: " + player.cacoDemons.TimeTillNextUnit);
-            Console.WriteLine("\nPress M to place maruders --- Press C to place Cacodemons --- Press S to place Snakes With Knives\n\nPress anything else to quit Placement selection");
-            switch (Console.ReadKey().Key)
-            {
-                case ConsoleKey.M:
-                    TryToPlaceUnit(PF, player, player.marauders, x, y, cursor);
-                    break;
-
-                case ConsoleKey.C:
-                    TryToPlaceUnit(PF, player, player.cacoDemons, x, y, cursor);
-                    break;
-
-                case ConsoleKey.S:
-                    TryToPlaceUnit(PF, player, player.snakes, x, y, cursor);
-                    break;
-
-                default:
-                    break;
-            }
-        }
-
-        public static void RoundHsPassed(Players player)
+        public static void RoundHasPassed(Players player)
         {
             player.cacoDemons.TimeTillNextUnit -= 1;
             player.marauders.TimeTillNextUnit -= 1;
@@ -354,15 +235,92 @@ namespace NagyHázi_Starcraft
             player.CurrentActtionsRemaining = player.MaxActions;
         }
 
+        public static void CursorMovement(Playingfield PF, Interacrions cursor, ref bool pass, Players player, int range)
+        {
+            switch (Console.ReadKey(true).Key)
+            {
+                case ConsoleKey.UpArrow:
+                    if (cursor.CursorCoordinates[0] - 1 < 0 || cursor.CursorCoordinates[0] - 1 < cursor.SelectedCoordinates[0] - range) break;
+                    PF.PfData[cursor.CursorCoordinates[0], cursor.CursorCoordinates[1]] = cursor.HiddenData;
+                    cursor.CursorCoordinates[0] -= 1;
+                    cursor.HiddenData = PF.PfData[cursor.CursorCoordinates[0], cursor.CursorCoordinates[1]];
+                    PF.PfData[cursor.CursorCoordinates[0], cursor.CursorCoordinates[1]] = 'X';
+                    break;
+
+                case ConsoleKey.DownArrow:
+                    if (cursor.CursorCoordinates[0] + 1 == 10 || cursor.CursorCoordinates[0] + 1 > cursor.SelectedCoordinates[0] + range) break;
+                    PF.PfData[cursor.CursorCoordinates[0], cursor.CursorCoordinates[1]] = cursor.HiddenData;
+                    cursor.CursorCoordinates[0] += 1;
+                    cursor.HiddenData = PF.PfData[cursor.CursorCoordinates[0], cursor.CursorCoordinates[1]];
+                    PF.PfData[cursor.CursorCoordinates[0], cursor.CursorCoordinates[1]] = 'X';
+
+                    break;
+
+                case ConsoleKey.LeftArrow:
+                    if (cursor.CursorCoordinates[1] - 1 < 0 || cursor.CursorCoordinates[1] - 1 < cursor.SelectedCoordinates[1] - range) break;
+                    PF.PfData[cursor.CursorCoordinates[0], cursor.CursorCoordinates[1]] = cursor.HiddenData;
+                    cursor.CursorCoordinates[1] -= 1;
+                    cursor.HiddenData = PF.PfData[cursor.CursorCoordinates[0], cursor.CursorCoordinates[1]];
+                    PF.PfData[cursor.CursorCoordinates[0], cursor.CursorCoordinates[1]] = 'X';
+
+                    break;
+
+                case ConsoleKey.RightArrow:
+                    if (cursor.CursorCoordinates[1] + 1 == 10 || cursor.CursorCoordinates[1] + 1 > cursor.SelectedCoordinates[1] + range) break;
+                    PF.PfData[cursor.CursorCoordinates[0], cursor.CursorCoordinates[1]] = cursor.HiddenData;
+                    cursor.CursorCoordinates[1] += 1;
+                    cursor.HiddenData = PF.PfData[cursor.CursorCoordinates[0], cursor.CursorCoordinates[1]];
+                    PF.PfData[cursor.CursorCoordinates[0], cursor.CursorCoordinates[1]] = 'X';
+
+                    break;
+
+                case ConsoleKey.Backspace:
+                    pass = true;
+                    Console.Clear();
+
+                    break;
+
+                case ConsoleKey.P:
+                    UnitPlacementOptions(PF, player, cursor.CursorCoordinates[0], cursor.CursorCoordinates[1], cursor);
+                    break;
+
+                case ConsoleKey.M:
+                    UnitMovementOptions(PF, cursor, player, ref pass);
+                    break;
+
+                case ConsoleKey.A:
+                    UnitAttackOptions(PF, cursor, player, ref pass);
+                    break;
+
+                case ConsoleKey.S:
+                    UnitMovementEffective(PF, cursor);
+                    player.CurrentActtionsRemaining -= 1;
+                    pass = true;
+                    break;
+
+                case ConsoleKey.T:
+                    pass = UnitAttackEffective(PF, cursor, player);
+                    break;
+
+                default:
+                    {
+                        Console.Write(new string(' ', Console.WindowWidth));
+                        Console.SetCursorPosition(0, Console.CursorTop - 1);
+                        break;
+                    }
+            }
+        }
+
         public static void Options(Playingfield PF, Interacrions cursor, Players player, ref bool pass)
         {
             Console.WriteLine("\nYour current population: " + player.CurrentPopulation + " (max population: " + player.MaxPopulation + " )");
             Console.WriteLine("\nYou have " + player.CurrentActtionsRemaining + " Actions remaining");
-            switch (PF.StateOfThePF[cursor.CursosCoordinates[0], cursor.CursosCoordinates[1]])
+            if (player.CurrentActtionsRemaining == 0) pass = true;
+            switch (PF.StateOfThePF[cursor.CursorCoordinates[0], cursor.CursorCoordinates[1]])
             {
                 case '•':
                     {
-                        if (cursor.CursosCoordinates[0] < player.Base.BaseCoordinates[0] + 4 && cursor.CursosCoordinates[0] > player.Base.BaseCoordinates[0] - 4)
+                        if (cursor.CursorCoordinates[0] < player.Base.BaseCoordinates[0] + 4 && cursor.CursorCoordinates[0] > player.Base.BaseCoordinates[0] - 4)
                         {
                             Console.WriteLine("\npress P to select this field to place a new unit!");
                         }
@@ -375,17 +333,170 @@ namespace NagyHázi_Starcraft
                     }
                 case 'Z':
                 case 'T':
-                    Console.WriteLine("Health of this unit is: " + PF.lives[cursor.CursosCoordinates[0], cursor.CursosCoordinates[1]]);
+                    Console.WriteLine("Health of this unit is: " + PF.lives[cursor.CursorCoordinates[0], cursor.CursorCoordinates[1]]);
                     break;
 
                 default:
+                    Console.WriteLine("Health of this unit is: " + PF.lives[cursor.CursorCoordinates[0], cursor.CursorCoordinates[1]]);
+                    if (cursor.HiddenData == player.TeamID)
                     {
-                        Console.WriteLine("Health XDXDof this unit is: " + PF.lives[cursor.CursosCoordinates[0], cursor.CursosCoordinates[1]]);
-
-                        break;
+                        Console.WriteLine("\nPress M to Move with this unit --- Press A to attack with this Unit");
                     }
+                    break;
             }
-            if (player.CurrentActtionsRemaining == 0) pass = true;
+        }
+
+        public static void UnitMovementOptions(Playingfield PF, Interacrions cursor, Players player, ref bool pass)
+        {
+            cursor.SelectedCoordinates[0] = cursor.CursorCoordinates[0];
+            cursor.SelectedCoordinates[1] = cursor.CursorCoordinates[1];
+
+            Console.WriteLine("Use the ARROW KEYS to select an area, then press S to finalize your selection\nor Press Backspace to exit selection");
+
+            while (!pass)
+            {
+                Frontend.FieldRender(PF);
+                Console.WriteLine("Use the ARROW KEYS to select an area, then press S to finalize your selection\nor Press Backspace to exit selection " + cursor.SelectedCoordinates[0] + "-" + cursor.SelectedCoordinates[1]);
+                CursorMovement(PF, cursor, ref pass, player, 1);
+            }
+            pass = false;
+            Frontend.FieldRender(PF);
+        }
+
+        private static void UnitMovementEffective(Playingfield PF, Interacrions cursor)
+        {
+            PF.StateOfThePF[cursor.CursorCoordinates[0], cursor.CursorCoordinates[1]] = PF.StateOfThePF[cursor.SelectedCoordinates[0], cursor.SelectedCoordinates[1]];
+            PF.PfData[cursor.CursorCoordinates[0], cursor.CursorCoordinates[1]] = PF.PfData[cursor.SelectedCoordinates[0], cursor.SelectedCoordinates[1]];
+            PF.lives[cursor.CursorCoordinates[0], cursor.CursorCoordinates[1]] = PF.lives[cursor.SelectedCoordinates[0], cursor.SelectedCoordinates[1]];
+            PF.strength[cursor.CursorCoordinates[0], cursor.CursorCoordinates[1]] = PF.strength[cursor.SelectedCoordinates[0], cursor.SelectedCoordinates[1]];
+            PF.range[cursor.CursorCoordinates[0], cursor.CursorCoordinates[1]] = PF.range[cursor.SelectedCoordinates[0], cursor.SelectedCoordinates[1]];
+            cursor.HiddenData = PF.PfData[cursor.SelectedCoordinates[0], cursor.SelectedCoordinates[1]];
+            PF.StateOfThePF[cursor.SelectedCoordinates[0], cursor.SelectedCoordinates[1]] = '•';
+            PF.PfData[cursor.SelectedCoordinates[0], cursor.SelectedCoordinates[1]] = '0';
+            PF.lives[cursor.SelectedCoordinates[0], cursor.SelectedCoordinates[1]] = 0;
+            PF.strength[cursor.SelectedCoordinates[0], cursor.SelectedCoordinates[1]] = 0;
+            PF.range[cursor.SelectedCoordinates[0], cursor.SelectedCoordinates[1]] = 0;
+        }
+
+        public static void UnitPlacementOptions(Playingfield PF, Players player, int x, int y, Interacrions cursor)
+        {
+            Console.SetCursorPosition(0, 14);
+            Console.WriteLine("Rounds till you can place your next Marauders: " + player.marauders.TimeTillNextUnit);
+            Console.WriteLine("Rounds till you can place your next Snakes with Knives: " + player.snakes.TimeTillNextUnit);
+            Console.WriteLine("Rounds till you can place your next CacoDemons: " + player.cacoDemons.TimeTillNextUnit);
+            Console.WriteLine("\nPress M to place maruders --- Press C to place Cacodemons --- Press S to place Snakes With Knives\nPress anything else to quit Placement selection");
+
+            switch (Console.ReadKey(true).Key)
+            {
+                case ConsoleKey.M:
+                    TryToPlaceUnit(PF, player, player.marauders, x, y, cursor);
+                    break;
+
+                case ConsoleKey.C:
+                    TryToPlaceUnit(PF, player, player.cacoDemons, x, y, cursor);
+                    break;
+
+                case ConsoleKey.S:
+                    TryToPlaceUnit(PF, player, player.snakes, x, y, cursor);
+                    break;
+
+                default:
+                    break;
+            }
+        }
+
+        public static void TryToPlaceUnit(Playingfield PF, Players player, Units unit, int x, int y, Interacrions cursor)
+        {
+            if (unit.TimeTillNextUnit == 0 && player.MaxPopulation >= player.CurrentPopulation + unit.PopultaionSize && player.MaxNumberOfUnits >= player.CurrentNumberOfUnits + 1)
+            {
+                PlaceUnit(PF, unit, x, y, cursor);
+                unit.TimeTillNextUnit = unit.TimeToMake;
+                player.CurrentActtionsRemaining -= 1;
+                player.CurrentNumberOfUnits += 1;
+                player.CurrentPopulation += unit.PopultaionSize;
+                Frontend.FieldRender(PF);
+            }
+            else
+            {
+                Frontend.FieldRender(PF);
+                Console.SetCursorPosition(0, 20);
+                if (player.MaxPopulation < player.CurrentPopulation + unit.PopultaionSize)
+                {
+                    Console.WriteLine("\nCan't place that Unit due to your max population size, choose a nother one");
+                    UnitPlacementOptions(PF, player, x, y, cursor);
+                }
+                if (player.marauders.TimeTillNextUnit != 0)
+                {
+                    Console.WriteLine("\nThat Unit isn't ready, choose a nother one!");
+                    UnitPlacementOptions(PF, player, x, y, cursor);
+                }
+                if (player.MaxNumberOfUnits < player.CurrentNumberOfUnits + 1)
+                {
+                    Console.WriteLine("\nYou can't have that many units, try moving or attacking with one of your units, or pass to the other player by pressing Backspace!");
+                    UnitPlacementOptions(PF, player, x, y, cursor);
+                }
+            }
+        }
+
+        public static void PlaceUnit(Playingfield PF, Units unit, int x, int y, Interacrions cursor)
+        {
+            PF.StateOfThePF[x, y] = unit.UnitID;
+            PF.lives[x, y] = unit.Lives;
+            PF.strength[x, y] = unit.AttackStrength;
+            PF.range[x, y] = unit.Range;
+            if (PF.WhosTurn == "Zerg")
+            {
+                PF.PfData[x, y] = 'Z';
+                cursor.HiddenData = 'Z';
+            }
+            else
+            {
+                PF.PfData[x, y] = 'T';
+                cursor.HiddenData = 'T';
+            }
+        }
+
+        public static void UnitAttackOptions(Playingfield PF, Interacrions cursor, Players player, ref bool pass)
+        {
+            cursor.SelectedCoordinates[0] = cursor.CursorCoordinates[0];
+            cursor.SelectedCoordinates[1] = cursor.CursorCoordinates[1];
+
+            Console.WriteLine("Use the ARROW KEYS to select an area, then press T to finalize your selection\nor Press Backspace to exit selection");
+
+            while (!pass)
+            {
+                Frontend.FieldRender(PF);
+                Console.WriteLine("Use the ARROW KEYS to select an area, then press T to finalize your selection\nor Press Backspace to exit selection " + cursor.SelectedCoordinates[0] + "-" + cursor.SelectedCoordinates[1]);
+                CursorMovement(PF, cursor, ref pass, player, PF.range[cursor.SelectedCoordinates[0], cursor.SelectedCoordinates[1]]);
+            }
+            pass = false;
+        }
+
+        private static bool UnitAttackEffective(Playingfield PF, Interacrions cursor, Players player)
+        {
+            bool pass;
+            if (cursor.HiddenData == player.TeamID || cursor.HiddenData == '0')
+            {
+                Console.WriteLine("You can't attack there!");
+                pass = true;
+            }
+            else
+            {
+                PF.lives[cursor.CursorCoordinates[0], cursor.CursorCoordinates[1]] -= PF.strength[cursor.SelectedCoordinates[0], cursor.SelectedCoordinates[1]];
+                if (PF.lives[cursor.CursorCoordinates[0], cursor.CursorCoordinates[1]] < 1)
+                {
+                    PF.StateOfThePF[cursor.CursorCoordinates[0], cursor.CursorCoordinates[1]] = '•';
+                    PF.PfData[cursor.CursorCoordinates[0], cursor.CursorCoordinates[1]] = '0';
+                    PF.lives[cursor.CursorCoordinates[0], cursor.CursorCoordinates[1]] = 0;
+                    PF.strength[cursor.CursorCoordinates[0], cursor.CursorCoordinates[1]] = 0;
+                    PF.range[cursor.CursorCoordinates[0], cursor.CursorCoordinates[1]] = 0;
+                    cursor.HiddenData = '0';
+                }
+                player.CurrentActtionsRemaining -= 1;
+                pass = true;
+            }
+
+            return pass;
         }
     }
 
@@ -443,13 +554,13 @@ namespace NagyHázi_Starcraft
             cursor.HiddenData = '0';
             while (InGame)
             {
-                while (!Pass)
+                while (!Pass) //one round
                 {
                     Frontend.FieldRender(PF);
                     Interacrions.Options(PF, cursor, Interacrions.WhosTurnItIs(PF, Zerg, Terran), ref Pass);
-                    Interacrions.CursorMovement(PF, cursor, ref Pass, Interacrions.WhosTurnItIs(PF, Zerg, Terran));
+                    Interacrions.CursorMovement(PF, cursor, ref Pass, Interacrions.WhosTurnItIs(PF, Zerg, Terran), 100);
                 }
-                Interacrions.RoundHsPassed(Interacrions.WhosTurnItIs(PF, Zerg, Terran));
+                Interacrions.RoundHasPassed(Interacrions.WhosTurnItIs(PF, Zerg, Terran));
                 Pass = false;
                 if (PF.WhosTurn == Zerg.name)
                 {
