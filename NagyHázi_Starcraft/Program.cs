@@ -592,11 +592,18 @@ namespace NagyHázi_Starcraft
 
         private static void Main()
         {
+            bool load;
+            Console.WriteLine("Wnat to load previous save? Y/N");
+            if (Console.ReadKey().Key == ConsoleKey.Y)
+            {
+                load = true;
+            }
+            else load = false;
+
             Console.CursorVisible = false;
             //initialising Unicode characters.
             System.Console.OutputEncoding = System.Text.Encoding.UTF8;
             //menu:
-            bool load = true;
             //Field initialization
             Playingfield PF = new Playingfield();
             Interacrions cursor = new Interacrions();
