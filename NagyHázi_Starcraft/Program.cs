@@ -24,7 +24,7 @@ namespace NagyHázi_Starcraft
 
         public static void FastConsoleClear()
         {
-            for (int i = 0; i < 20; i++)
+            for (int i = 0; i < 25; i++)
             {
                 Console.SetCursorPosition(0, i);
                 Console.Write(new string(' ', Console.WindowWidth));
@@ -32,14 +32,18 @@ namespace NagyHázi_Starcraft
             Console.SetCursorPosition(0, 0);
         }
 
-        public static void FieldRender(Playingfield PF)
+        public static void FieldRender(Playingfield PF, int mode = 2)
         {
             FastConsoleClear();
-            Console.WriteLine(PF.WhosTurn + "'s turn! --- To Save game status press Enter --- To Exit press Escape");
-            Console.SetCursorPosition(0, 21); Console.Write(new string(' ', Console.WindowWidth));
-            Console.SetCursorPosition(0, 1);
+            if (PF.WhosTurn == "Terran") Console.ForegroundColor = ConsoleColor.Blue;
+            if (PF.WhosTurn == "Zerg") Console.ForegroundColor = ConsoleColor.Red;
+            Console.Write(PF.WhosTurn + "'s Turn!");
+            if (mode == 1) Console.Write(" -- To Save game status press [Enter] -- To Exit press [Escape]");
+            Console.ResetColor();
+            Console.SetCursorPosition(0, 2);
             for (int i = 0; i < 10; i++)
             {
+                Console.Write("             ");
                 for (int j = 0; j < 10; j++)
                 {
                     switch (PF.PfData[i, j])
@@ -143,9 +147,9 @@ namespace NagyHázi_Starcraft
     {
         public Marauders()
         {
-            Lives = 5;
+            Lives = 6;
             AttackStrength = 3;
-            Range = 1;
+            Range = 3;
             PopultaionSize = 3;
             TimeToMake = 3;
             TimeTillNextUnit = 0;
@@ -158,7 +162,7 @@ namespace NagyHázi_Starcraft
     {
         public CacoDemons()
         {
-            Lives = 3;
+            Lives = 4;
             AttackStrength = 5;
             Range = 3;
             PopultaionSize = 5;
@@ -174,7 +178,7 @@ namespace NagyHázi_Starcraft
         public SnakesWithKnives()
         {
             Lives = 2;
-            AttackStrength = 1;
+            AttackStrength = 2;
             Range = 1;
             PopultaionSize = 2;
             TimeToMake = 1;
@@ -206,6 +210,7 @@ namespace NagyHázi_Starcraft
         private readonly int[] CursorCoordinates = new int[2];
         public char HiddenData;
         public int[] SelectedCoordinates = new int[2];
+        public int Mode; //1. mode movement 2.mode attack
 
         public Interacrions()
         {
@@ -248,6 +253,7 @@ namespace NagyHázi_Starcraft
 
         private static void FileSave(Playingfield PF, Players Zerg, Players Terran, Interacrions cursor)
         {
+            Console.WriteLine();
             Frontend.SlowPrint("Saving Gamestate...");
             BinaryFormatter bf = new BinaryFormatter();
             FileStream pfdata = File.Create("PF.dat");
@@ -267,6 +273,7 @@ namespace NagyHázi_Starcraft
 
         public static void FileLoad(ref Playingfield PF, ref Players Zerg, ref Players Terran, ref Interacrions cursor)
         {
+            Console.WriteLine();
             Frontend.SlowPrint("Loading save...");
             BinaryFormatter bf = new BinaryFormatter();
             FileStream pfdata = File.Open("PF.dat", FileMode.Open);
@@ -285,105 +292,131 @@ namespace NagyHázi_Starcraft
             cursor = tempCursor;
         }
 
-        public static void CursorMovement(Playingfield PF, Interacrions cursor, ref bool pass, Players player, int range, Players Zerg, Players Terran)
+        public static void CursorMovement(Playingfield PF, Interacrions cursor, ref bool pass, Players player, int range, Players Zerg, Players Terran, int mode)
         {
-            switch (Console.ReadKey(true).Key)
-            {
-                case ConsoleKey.UpArrow:
-                    if (cursor.CursorCoordinates[0] - 1 < 0 || cursor.CursorCoordinates[0] - 1 < cursor.SelectedCoordinates[0] - range) break;
-                    PF.PfData[cursor.CursorCoordinates[0], cursor.CursorCoordinates[1]] = cursor.HiddenData;
-                    cursor.CursorCoordinates[0] -= 1;
-                    cursor.HiddenData = PF.PfData[cursor.CursorCoordinates[0], cursor.CursorCoordinates[1]];
-                    PF.PfData[cursor.CursorCoordinates[0], cursor.CursorCoordinates[1]] = 'X';
-                    break;
-
-                case ConsoleKey.DownArrow:
-                    if (cursor.CursorCoordinates[0] + 1 == 10 || cursor.CursorCoordinates[0] + 1 > cursor.SelectedCoordinates[0] + range) break;
-                    PF.PfData[cursor.CursorCoordinates[0], cursor.CursorCoordinates[1]] = cursor.HiddenData;
-                    cursor.CursorCoordinates[0] += 1;
-                    cursor.HiddenData = PF.PfData[cursor.CursorCoordinates[0], cursor.CursorCoordinates[1]];
-                    PF.PfData[cursor.CursorCoordinates[0], cursor.CursorCoordinates[1]] = 'X';
-
-                    break;
-
-                case ConsoleKey.LeftArrow:
-                    if (cursor.CursorCoordinates[1] - 1 < 0 || cursor.CursorCoordinates[1] - 1 < cursor.SelectedCoordinates[1] - range) break;
-                    PF.PfData[cursor.CursorCoordinates[0], cursor.CursorCoordinates[1]] = cursor.HiddenData;
-                    cursor.CursorCoordinates[1] -= 1;
-                    cursor.HiddenData = PF.PfData[cursor.CursorCoordinates[0], cursor.CursorCoordinates[1]];
-                    PF.PfData[cursor.CursorCoordinates[0], cursor.CursorCoordinates[1]] = 'X';
-
-                    break;
-
-                case ConsoleKey.RightArrow:
-                    if (cursor.CursorCoordinates[1] + 1 == 10 || cursor.CursorCoordinates[1] + 1 > cursor.SelectedCoordinates[1] + range) break;
-                    PF.PfData[cursor.CursorCoordinates[0], cursor.CursorCoordinates[1]] = cursor.HiddenData;
-                    cursor.CursorCoordinates[1] += 1;
-                    cursor.HiddenData = PF.PfData[cursor.CursorCoordinates[0], cursor.CursorCoordinates[1]];
-                    PF.PfData[cursor.CursorCoordinates[0], cursor.CursorCoordinates[1]] = 'X';
-
-                    break;
-
-                case ConsoleKey.Backspace:
-                    pass = true;
-                    Console.Clear();
-
-                    break;
-
-                case ConsoleKey.P:
-                    UnitPlacementOptions(PF, player, cursor.CursorCoordinates[0], cursor.CursorCoordinates[1], cursor);
-                    break;
-
-                case ConsoleKey.M:
-                    UnitMovementOptions(PF, cursor, player, ref pass);
-                    break;
-
-                case ConsoleKey.A:
-                    UnitAttackOptions(PF, cursor, player, ref pass);
-                    break;
-
-                case ConsoleKey.S:
-                    UnitMovementEffective(PF, cursor);
-                    player.CurrentActtionsRemaining -= 1;
-                    pass = true;
-                    break;
-
-                case ConsoleKey.T:
-                    pass = UnitAttackEffective(PF, cursor, player);
-                    break;
-
-                case ConsoleKey.Enter:
-                    FileSave(PF, Zerg, Terran, cursor);
-                    break;
-
-                case ConsoleKey.Escape:
-                    PF.lives[0, 4] = 0;
-                    PF.lives[9, 4] = 0;
-                    pass = true;
-                    break;
-
-                default:
-                    {
-                        Console.Write(new string(' ', Console.WindowWidth));
-                        Console.SetCursorPosition(0, Console.CursorTop - 1);
+            if (player.CurrentActtionsRemaining == 0) pass = true;
+            if (!pass) switch (Console.ReadKey(true).Key)
+                {
+                    case ConsoleKey.UpArrow:
+                        if (cursor.CursorCoordinates[0] - 1 < 0 || cursor.CursorCoordinates[0] - 1 < cursor.SelectedCoordinates[0] - range) break;
+                        PF.PfData[cursor.CursorCoordinates[0], cursor.CursorCoordinates[1]] = cursor.HiddenData;
+                        cursor.CursorCoordinates[0] -= 1;
+                        cursor.HiddenData = PF.PfData[cursor.CursorCoordinates[0], cursor.CursorCoordinates[1]];
+                        PF.PfData[cursor.CursorCoordinates[0], cursor.CursorCoordinates[1]] = 'X';
                         break;
-                    }
-            }
+
+                    case ConsoleKey.DownArrow:
+                        if (cursor.CursorCoordinates[0] + 1 == 10 || cursor.CursorCoordinates[0] + 1 > cursor.SelectedCoordinates[0] + range) break;
+                        PF.PfData[cursor.CursorCoordinates[0], cursor.CursorCoordinates[1]] = cursor.HiddenData;
+                        cursor.CursorCoordinates[0] += 1;
+                        cursor.HiddenData = PF.PfData[cursor.CursorCoordinates[0], cursor.CursorCoordinates[1]];
+                        PF.PfData[cursor.CursorCoordinates[0], cursor.CursorCoordinates[1]] = 'X';
+
+                        break;
+
+                    case ConsoleKey.LeftArrow:
+                        if (cursor.CursorCoordinates[1] - 1 < 0 || cursor.CursorCoordinates[1] - 1 < cursor.SelectedCoordinates[1] - range) break;
+                        PF.PfData[cursor.CursorCoordinates[0], cursor.CursorCoordinates[1]] = cursor.HiddenData;
+                        cursor.CursorCoordinates[1] -= 1;
+                        cursor.HiddenData = PF.PfData[cursor.CursorCoordinates[0], cursor.CursorCoordinates[1]];
+                        PF.PfData[cursor.CursorCoordinates[0], cursor.CursorCoordinates[1]] = 'X';
+
+                        break;
+
+                    case ConsoleKey.RightArrow:
+                        if (cursor.CursorCoordinates[1] + 1 == 10 || cursor.CursorCoordinates[1] + 1 > cursor.SelectedCoordinates[1] + range) break;
+                        PF.PfData[cursor.CursorCoordinates[0], cursor.CursorCoordinates[1]] = cursor.HiddenData;
+                        cursor.CursorCoordinates[1] += 1;
+                        cursor.HiddenData = PF.PfData[cursor.CursorCoordinates[0], cursor.CursorCoordinates[1]];
+                        PF.PfData[cursor.CursorCoordinates[0], cursor.CursorCoordinates[1]] = 'X';
+
+                        break;
+
+                    case ConsoleKey.Backspace:
+                        pass = true;
+                        Console.Clear();
+
+                        break;
+
+                    case ConsoleKey.P:
+                        if (mode != 1) break;
+                        if (cursor.HiddenData != '0') break;
+                        Frontend.FieldRender(PF);
+                        if (cursor.CursorCoordinates[0] < player.Base.BaseCoordinates[0] + 4 && cursor.CursorCoordinates[0] > player.Base.BaseCoordinates[0] - 4)
+                        {
+                            UnitPlacementOptions(PF, player, cursor.CursorCoordinates[0], cursor.CursorCoordinates[1], cursor);
+                        }
+                        break;
+
+                    case ConsoleKey.M:
+                        if (mode != 1) break;
+                        if (PF.StateOfThePF[cursor.CursorCoordinates[0], cursor.CursorCoordinates[1]] == player.TeamID) break; //you cant move your base
+                        if (cursor.HiddenData != player.TeamID) break; //you cant move the enemies units
+                        UnitMovementOptions(PF, cursor, player, ref pass);
+                        break;
+
+                    case ConsoleKey.A:
+                        if (mode != 1) break;
+                        if (PF.StateOfThePF[cursor.CursorCoordinates[0], cursor.CursorCoordinates[1]] == player.TeamID) break; //you cant attack with your base
+                        if (cursor.HiddenData != player.TeamID) break; //you cant attack with the enemies unit
+                        UnitAttackOptions(PF, cursor, player, ref pass);
+                        break;
+
+                    case ConsoleKey.S:
+                        if (mode != 2) break;
+                        if (cursor.HiddenData != '0') break;
+                        UnitMovementEffective(PF, cursor);
+                        player.CurrentActtionsRemaining -= 1;
+                        pass = true;
+                        break;
+
+                    case ConsoleKey.T:
+                        if (mode != 3) break;
+                        if (cursor.HiddenData == player.TeamID || cursor.HiddenData == '0') break; // cant attack your own uit, cant attack empty field
+                        pass = UnitAttackEffective(PF, cursor, player);
+                        break;
+
+                    case ConsoleKey.Enter:
+                        if (mode != 1) break;
+                        FileSave(PF, Zerg, Terran, cursor);
+                        break;
+
+                    case ConsoleKey.Escape:
+                        if (mode != 1) break;
+                        PF.lives[0, 4] = 0;
+                        PF.lives[9, 4] = 0;
+                        pass = true;
+                        break;
+
+                    default:
+                        {
+                            Console.Write(new string(' ', Console.WindowWidth));
+                            Console.SetCursorPosition(0, Console.CursorTop - 1);
+                            break;
+                        }
+                }
             if (PF.lives[0, 4] < 1 || PF.lives[9, 4] < 1) pass = true;
         }
 
-        public static void Options(Playingfield PF, Interacrions cursor, Players player, ref bool pass)
+        public static void Options(Playingfield PF, Interacrions cursor, Players player)
         {
             Console.WriteLine("\nYour current population: " + player.CurrentPopulation + " (max population: " + player.MaxPopulation + " )");
-            Console.WriteLine("\nYou have " + player.CurrentActtionsRemaining + " Actions remaining");
-            if (player.CurrentActtionsRemaining == 0) pass = true;
+            Console.Write("\nYou have " + player.CurrentActtionsRemaining + " Actions remaining -- Press ");
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.Write("[Backspace]");
+            Console.ResetColor();
+            Console.Write(" to pass");
+
             switch (PF.StateOfThePF[cursor.CursorCoordinates[0], cursor.CursorCoordinates[1]])
             {
                 case '•':
                     {
                         if (cursor.CursorCoordinates[0] < player.Base.BaseCoordinates[0] + 4 && cursor.CursorCoordinates[0] > player.Base.BaseCoordinates[0] - 4)
                         {
-                            Console.WriteLine("\npress P to select this field to place a new unit!");
+                            Console.Write("\nPress ");
+                            Console.ForegroundColor = ConsoleColor.Yellow;
+                            Console.Write("[P]"); Console.ResetColor();
+                            Console.Write(" to select this field to place a new unit!");
                         }
                         else
                         {
@@ -394,14 +427,20 @@ namespace NagyHázi_Starcraft
                     }
                 case 'Z':
                 case 'T':
-                    Console.WriteLine("Health of this unit is: " + PF.lives[cursor.CursorCoordinates[0], cursor.CursorCoordinates[1]]);
+                    Console.WriteLine("\nHealth of this unit is: " + PF.lives[cursor.CursorCoordinates[0], cursor.CursorCoordinates[1]]);
                     break;
 
                 default:
-                    Console.WriteLine("Health of this unit is: " + PF.lives[cursor.CursorCoordinates[0], cursor.CursorCoordinates[1]]);
+                    Console.WriteLine("\nHealth of this unit is: " + PF.lives[cursor.CursorCoordinates[0], cursor.CursorCoordinates[1]]);
                     if (cursor.HiddenData == player.TeamID)
                     {
-                        Console.WriteLine("\nPress M to Move with this unit --- Press A to attack with this Unit");
+                        Console.Write("\nPress ");
+                        Console.ForegroundColor = ConsoleColor.Yellow;
+                        Console.Write("[M]"); Console.ResetColor();
+                        Console.Write(" to Move with this unit --- Press ");
+                        Console.ForegroundColor = ConsoleColor.Yellow;
+                        Console.Write("[A]"); Console.ResetColor();
+                        Console.Write(" to attack with this Unit");
                     }
                     break;
             }
@@ -411,14 +450,17 @@ namespace NagyHázi_Starcraft
         {
             cursor.SelectedCoordinates[0] = cursor.CursorCoordinates[0];
             cursor.SelectedCoordinates[1] = cursor.CursorCoordinates[1];
-
-            Console.WriteLine("Use the ARROW KEYS to select an area, then press S to finalize your selection\nor Press Backspace to exit selection");
-
             while (!pass)
             {
                 Frontend.FieldRender(PF);
-                Console.WriteLine("Use the ARROW KEYS to select an area, then press S to finalize your selection\nor Press Backspace to exit selection " + cursor.SelectedCoordinates[0] + "-" + cursor.SelectedCoordinates[1]);
-                CursorMovement(PF, cursor, ref pass, player, 1, player, player);
+                Console.Write("\nUse the ARROW KEYS to select an area, then press ");
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write("[S]"); Console.ResetColor();
+                Console.Write(" to finalize your selection\nor Press ");
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write("[BackSpace]"); Console.ResetColor();
+                Console.Write(" to exit selection ");
+                CursorMovement(PF, cursor, ref pass, player, 1, player, player, 2);
             }
             pass = false;
             Frontend.FieldRender(PF);
@@ -442,10 +484,21 @@ namespace NagyHázi_Starcraft
         private static void UnitPlacementOptions(Playingfield PF, Players player, int x, int y, Interacrions cursor)
         {
             Console.SetCursorPosition(0, 14);
-            Console.WriteLine("Rounds till you can place your next Marauders: " + player.marauders.TimeTillNextUnit);
+            Console.WriteLine("Rounds till you can place your next Marauders: " + player.marauders.TimeTillNextUnit + "                                  ");
             Console.WriteLine("Rounds till you can place your next Snakes with Knives: " + player.snakes.TimeTillNextUnit);
             Console.WriteLine("Rounds till you can place your next CacoDemons: " + player.cacoDemons.TimeTillNextUnit);
-            Console.WriteLine("\nPress M to place maruders --- Press C to place Cacodemons --- Press S to place Snakes With Knives\nPress anything else to quit Placement selection");
+            Console.Write("\nPress "); Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.Write("[M]"); Console.ResetColor();
+            Console.Write(" to place maruders --- Press ");
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.Write("[C]"); Console.ResetColor();
+            Console.Write(" to place Cacodemons --- Press ");
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.Write("[S]"); Console.ResetColor();
+            Console.Write(" to place Snakes With Knives\n\nPress ");
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.Write("[BackSpace]"); Console.ResetColor();
+            Console.Write(" to quit Placement selection");
 
             switch (Console.ReadKey(true).Key)
             {
@@ -461,7 +514,11 @@ namespace NagyHázi_Starcraft
                     TryToPlaceUnit(PF, player, player.snakes, x, y, cursor);
                     break;
 
+                case ConsoleKey.Backspace:
+                    break;
+
                 default:
+                    UnitPlacementOptions(PF, player, x, y, cursor);
                     break;
             }
         }
@@ -486,14 +543,17 @@ namespace NagyHázi_Starcraft
                     Console.WriteLine("\nCan't place that Unit due to your max population size, choose a nother one");
                     UnitPlacementOptions(PF, player, x, y, cursor);
                 }
-                if (player.marauders.TimeTillNextUnit != 0)
+                else if (unit.TimeTillNextUnit != 0)
                 {
                     Console.WriteLine("\nThat Unit isn't ready, choose a nother one!");
                     UnitPlacementOptions(PF, player, x, y, cursor);
                 }
-                if (player.MaxNumberOfUnits < player.CurrentNumberOfUnits + 1)
+                else if (player.MaxNumberOfUnits < player.CurrentNumberOfUnits + 1)
                 {
-                    Console.WriteLine("\nYou can't have that many units, try moving or attacking with one of your units, or pass to the other player by pressing Backspace!");
+                    Console.WriteLine("\nYou can't have that many units, try moving or attacking with one of your units, or pass to the other player by pressing ");
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.Write("[BackSpace]"); Console.ResetColor();
+                    Console.Write("!");
                     UnitPlacementOptions(PF, player, x, y, cursor);
                 }
             }
@@ -522,13 +582,25 @@ namespace NagyHázi_Starcraft
             cursor.SelectedCoordinates[0] = cursor.CursorCoordinates[0];
             cursor.SelectedCoordinates[1] = cursor.CursorCoordinates[1];
 
-            Console.WriteLine("Use the ARROW KEYS to select an area, then press T to finalize your selection\nor Press Backspace to exit selection");
+            Console.Write("\nUse the ARROW KEYS to select an area, then press ");
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.Write("[T]"); Console.ResetColor();
+            Console.Write(" to finalize your selection\nor Press ");
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.Write("[Backspace]"); Console.ResetColor();
+            Console.Write(" to exit selection");
 
             while (!pass)
             {
                 Frontend.FieldRender(PF);
-                Console.WriteLine("Use the ARROW KEYS to select an area, then press T to finalize your selection\nor Press Backspace to exit selection " + cursor.SelectedCoordinates[0] + "-" + cursor.SelectedCoordinates[1]);
-                CursorMovement(PF, cursor, ref pass, player, PF.range[cursor.SelectedCoordinates[0], cursor.SelectedCoordinates[1]], player, player);
+                Console.Write("\nUse the ARROW KEYS to select an area, then press ");
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write("[T]"); Console.ResetColor();
+                Console.Write(" to finalize your selection\nor Press ");
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write("[BackSpace]"); Console.ResetColor();
+                Console.Write(" to exit selection ");
+                CursorMovement(PF, cursor, ref pass, player, PF.range[cursor.SelectedCoordinates[0], cursor.SelectedCoordinates[1]], player, player, 3);
             }
             pass = false;
         }
@@ -584,6 +656,94 @@ namespace NagyHázi_Starcraft
         }
     }
 
+    internal class Menu
+    {
+        private static void Rules()
+        {
+            Frontend.FastConsoleClear();
+            string text = System.IO.File.ReadAllText("Rules.txt");
+            Frontend.SlowPrint(text, 10);
+            Console.WriteLine("\nPress ANY KEY to head back to the Menu");
+            Console.ReadKey(true);
+        }
+
+        private static void Cretids()
+        {
+            Frontend.FastConsoleClear();
+            string text = System.IO.File.ReadAllText("Credits.txt");
+            Frontend.SlowPrint(text, 10);
+            Console.WriteLine("\nPress ANY KEY to head back to the Menu");
+            Console.ReadKey(true);
+        }
+
+        public static void MenuRender(ref bool load, ref int selector)
+        {
+            Frontend.FastConsoleClear();
+            Console.WriteLine("   _____ __             ______           ______ " +
+                            "\n  / ___// /_____ ______/ ____/________ _/ __/ /_" +
+                            "\n  \\__ \\/ __/ __ `/ ___/ /   / ___/ __ `/ /_/ __/" +
+                            "\n ___/ / /_/ /_/ / /  / /___/ /  / /_/ / __/ /_  " +
+                            "\n/____/\\__/\\__,_/_/   \\____/_/   \\__,_/_/  \\__/" +
+                            "\n V_1.0");
+            if (selector == 1) Console.ForegroundColor = ConsoleColor.Green;
+            Console.Write("\n\n\n              Start a New Game");
+            Console.ResetColor();
+            if (selector == 2) Console.ForegroundColor = ConsoleColor.Green;
+            Console.Write("\n            Load a previous Game");
+            Console.ResetColor();
+            if (selector == 3) Console.ForegroundColor = ConsoleColor.Green;
+            Console.Write("\n                   Rules");
+            Console.ResetColor();
+            if (selector == 4) Console.ForegroundColor = ConsoleColor.Green;
+            Console.Write("\n\n                  Credits");
+            Console.ResetColor();
+            switch (Console.ReadKey(true).Key)
+            {
+                case ConsoleKey.DownArrow:
+                    if (selector < 4) selector += 1;
+                    MenuRender(ref load, ref selector);
+                    break;
+
+                case ConsoleKey.UpArrow:
+                    if (selector > 1) selector -= 1;
+                    MenuRender(ref load, ref selector);
+                    break;
+
+                case ConsoleKey.Enter:
+                    switch (selector)
+                    {
+                        case 1:
+                            load = false;
+                            break;
+
+                        case 2:
+                            load = true;
+                            break;
+
+                        case 3:
+
+                            Rules();
+                            MenuRender(ref load, ref selector);
+                            break;
+
+                        case 4:
+                            Cretids();
+                            MenuRender(ref load, ref selector);
+                            break;
+
+                        default:
+                            MenuRender(ref load, ref selector);
+                            break;
+                    }
+                    break;
+
+                default:
+                    MenuRender(ref load, ref selector);
+                    break;
+            }
+        }
+    }
+
     internal class Program
     {
         protected Program()
@@ -592,72 +752,86 @@ namespace NagyHázi_Starcraft
 
         private static void Main()
         {
-            bool load;
-            Console.WriteLine("Wnat to load previous save? Y/N");
-            if (Console.ReadKey().Key == ConsoleKey.Y)
+            Console.WindowHeight = 27;
+            Console.WindowWidth = 106;
+            bool ingame = true;
+            while (ingame)
             {
-                load = true;
-            }
-            else load = false;
+                bool load = false;
+                int menuselector = 1;
+                Console.CursorVisible = false;
+                Menu.MenuRender(ref load, ref menuselector);
 
-            Console.CursorVisible = false;
-            //initialising Unicode characters.
-            System.Console.OutputEncoding = System.Text.Encoding.UTF8;
-            //menu:
-            //Field initialization
-            Playingfield PF = new Playingfield();
-            Interacrions cursor = new Interacrions();
-            //Player initialisation
-
-            Players Zerg = new Players("Zerg", 'Z');
-            Players Terran = new Players("Terran", 'T');
-            PF.WhosTurn = Zerg.name;
-            bool Pass = false;
-            Interacrions.PlaceUnit(PF, Interacrions.WhosTurnItIs(PF, Zerg, Terran).Base, 0, 4, cursor);
-            PF.StateOfThePF[0, 4] = 'Z';
-            Zerg.Base.BaseCoordinates[0] = 0; Zerg.Base.BaseCoordinates[1] = 4;
-            PF.WhosTurn = Terran.name;
-            Interacrions.PlaceUnit(PF, Interacrions.WhosTurnItIs(PF, Zerg, Terran).Base, 9, 4, cursor);
-            PF.StateOfThePF[9, 4] = 'T';
-            Terran.Base.BaseCoordinates[0] = 9; Terran.Base.BaseCoordinates[1] = 4;
-            PF.WhosTurn = Zerg.name;
-            cursor.HiddenData = '0';
-            while (PF.lives[0, 4] > 0 && PF.lives[9, 4] > 0)
-            {
-                while (!Pass) //one round
+                //initialising Unicode characters.
+                System.Console.OutputEncoding = System.Text.Encoding.UTF8;
+                //menu:
+                //Game initialization
+                Playingfield PF = new Playingfield();
+                Interacrions cursor = new Interacrions();
+                Players Zerg = new Players("Zerg", 'Z');
+                Players Terran = new Players("Terran", 'T');
+                PF.WhosTurn = Zerg.name;
+                bool Pass = false;
+                Interacrions.PlaceUnit(PF, Interacrions.WhosTurnItIs(PF, Zerg, Terran).Base, 0, 4, cursor);
+                PF.StateOfThePF[0, 4] = 'Z';
+                Zerg.Base.BaseCoordinates[0] = 0; Zerg.Base.BaseCoordinates[1] = 4;
+                PF.WhosTurn = Terran.name;
+                Interacrions.PlaceUnit(PF, Interacrions.WhosTurnItIs(PF, Zerg, Terran).Base, 9, 4, cursor);
+                PF.StateOfThePF[9, 4] = 'T';
+                Terran.Base.BaseCoordinates[0] = 9; Terran.Base.BaseCoordinates[1] = 4;
+                PF.WhosTurn = Zerg.name;
+                cursor.HiddenData = '0';
+                PF.PfData[5, 4] = 'X';
+                //in a game
+                while (PF.lives[0, 4] > 0 && PF.lives[9, 4] > 0)
                 {
-                    if (load)
+                    while (!Pass) //one round
                     {
-                        Interacrions.FileLoad(ref PF, ref Zerg, ref Terran, ref cursor);
-                        load = false;
+                        if (load)
+                        {
+                            Interacrions.FileLoad(ref PF, ref Zerg, ref Terran, ref cursor);
+                            load = false;
+                        }
+                        Frontend.FieldRender(PF, 1);
+                        Interacrions.Options(PF, cursor, Interacrions.WhosTurnItIs(PF, Zerg, Terran));
+                        Interacrions.CursorMovement(PF, cursor, ref Pass, Interacrions.WhosTurnItIs(PF, Zerg, Terran), 100, Zerg, Terran, 1);
                     }
-                    Frontend.FieldRender(PF);
-                    Interacrions.Options(PF, cursor, Interacrions.WhosTurnItIs(PF, Zerg, Terran), ref Pass);
-                    Interacrions.CursorMovement(PF, cursor, ref Pass, Interacrions.WhosTurnItIs(PF, Zerg, Terran), 100, Zerg, Terran);
+                    //end of a player's round
+                    Interacrions.RoundHasPassed(Interacrions.WhosTurnItIs(PF, Zerg, Terran));
+                    Pass = false;
+                    if (PF.WhosTurn == Zerg.name)
+                    {
+                        PF.WhosTurn = Terran.name;
+                    }
+                    else
+                    {
+                        PF.WhosTurn = Zerg.name;
+                    }
                 }
-                Interacrions.RoundHasPassed(Interacrions.WhosTurnItIs(PF, Zerg, Terran));
-                Pass = false;
-                if (PF.WhosTurn == Zerg.name)
+                //Game end
+                if (PF.lives[0, 4] < 1 && PF.lives[9, 4] < 1)
                 {
-                    PF.WhosTurn = Terran.name;
+                    Console.Clear();
+                    Console.WriteLine("Thanks for playing!");
                 }
                 else
                 {
-                    PF.WhosTurn = Zerg.name;
+                    if (PF.lives[0, 4] < 1) Console.WriteLine("Terran WIN!");
+                    else Console.WriteLine("Zerg WIN!");
+                    Console.WriteLine("Thanks for playing!");
+                }
+                Console.WriteLine("\nPress Enter to go back to the Menu!\nTo Exit the application press ANY BUTTON");
+                switch (Console.ReadKey(true).Key)
+                {
+                    case ConsoleKey.Enter:
+                        ingame = true;
+                        break;
+
+                    default:
+                        ingame = false;
+                        break;
                 }
             }
-            if (PF.lives[0, 4] < 1 && PF.lives[9, 4] < 1)
-            {
-                Console.Clear();
-                Console.WriteLine("Thanks for playing!");
-            }
-            else
-            {
-                if (PF.lives[0, 4] < 1) Console.WriteLine("Terran WIN!");
-                else Console.WriteLine("Zerg WIN!");
-            }
-
-            Console.ReadLine();
         }
     }
 }
