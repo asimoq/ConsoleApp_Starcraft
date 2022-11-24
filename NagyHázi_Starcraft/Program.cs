@@ -662,8 +662,10 @@ namespace NagyHázi_Starcraft
         {
             Frontend.FastConsoleClear();
             string text = System.IO.File.ReadAllText("Rules.txt");
-            Frontend.SlowPrint(text, 10);
+            Console.WriteLine(text);
+
             Console.WriteLine("\nPress ANY KEY to head back to the Menu");
+            Console.SetCursorPosition(0, 0);
             Console.ReadKey(true);
         }
 
