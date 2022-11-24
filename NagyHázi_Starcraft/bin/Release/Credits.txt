@@ -1,0 +1,5 @@
+Starcraft Boardgame Console application for two players
+__________________________________________________________________________________________________________
+Developer: Szczuka Bendegúz (www.github.com/asimoq)
+
+2022, Budapest

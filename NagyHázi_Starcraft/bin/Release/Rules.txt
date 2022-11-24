@@ -1,0 +1,48 @@
+Starcraft Boardgame Console application for two players
+__________________________________________________________________________________________________________
+
+The aim of the game is to destroy the enemy’s Base.
+
+During the game each player takes turns in which they can complete a
+maximum of three actions.  These can be the following:
+__________________________________________________________________________________________________________
+
+-Placing a new unit:
+
+To place a new unit you need to select a field near to your base which
+isn’t occupied already.You can either place Mandruders(M),
+CacoDemons(C) or Snakes with Knives. You can only place a new unit if
+by doing so you would not exceed your population limit(20) and your max
+number of units(6). Each Unit type needs time(measured in your
+own rounds) to get ready. Placing a unit will cost you one action. 
+
+-Moving one of your units:
+
+You can select one of your units(except your base) to move it by one
+step to an empty field. Moving a Unit will cost you one action.
+
+-Attacking with one of your units:
+
+You can choose one of your units(except your base) and then select an
+enemy(including their base) in its range to attack. Each type of unit
+has a different range and attack strength. Attacking will cost you one action.
+__________________________________________________________________________________________________________
+
+If you have no actions left or you decide to pass, it’s the other player’s
+turn. This will repeat till one of your bases will be destroyed.
+
+Now you know the rules of Starcraft the board game. Have fun!
+__________________________________________________________________________________________________________
+Information about the units:
+__________________________________________________________________________________________________________
+              Lives:  Attack strength:  Attack range:  Rounds till ready:  Population size:
+Base:          10            0               0                0                    0   
+
+Marauders:      6            3               2                3                    3
+
+CacoDemons:     4            5               3                4                    5
+
+Snakes with     2            2               1                1                    2
+Knives:
+__________________________________________________________________________________________________________
+V_1.0
